@@ -1,3 +1,4 @@
+//Imports
 const { Client } = require('pg');
 
 //Database config:
