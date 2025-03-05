@@ -34,7 +34,7 @@ const server = http.createServer((req, res) => {
     });
     req.on("end", () => {
       try {
-        const { name, category } = JSON.parse(body); // ✅ Parseando corretamente o JSON
+        const { name, category } = JSON.parse(body);
 
         if (!name || !category) {
           res.statusCode = 400;
