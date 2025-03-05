@@ -33,23 +33,34 @@ const server = http.createServer((req, res) => {
       body += chunk;
     });
     req.on("end", () => {
-      const { name, category } = qs.parse(body);
-      const query =
-        "INSERT INTO activity (name, category, created_at, updated_at) VALUES($1, $2, NOW(), NOW()) RETURNING *";
-      db.query(query, [name, category], (err, result) => {
-        if (err) {
-          res.statusCode = 500;
-          res.end(JSON.stringify({ error: "Internal Server Error" }));
+      try {
+        const { name, category } = JSON.parse(body); // ✅ Parseando corretamente o JSON
+
+        if (!name || !category) {
+          res.statusCode = 400;
+          res.end(
+            JSON.stringify({
+              error: "Os campos 'name' e 'category' são obrigatórios",
+            })
+          );
           return;
         }
-        if (!result || !result.rows) {
-          res.statusCode = 500;
-          res.end(JSON.stringify({ error: "Erro ao inserir atividade" }));
-          return;
-        }
-        res.statusCode = 201;
-        res.end(JSON.stringify(result.rows[0]));
-      });
+
+        const query =
+          "INSERT INTO activity (name, category, created_at, updated_at) VALUES($1, $2, NOW(), NOW()) RETURNING *";
+        db.query(query, [name, category], (err, result) => {
+          if (err) {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: "Erro ao inserir atividade" }));
+            return;
+          }
+          res.statusCode = 201;
+          res.end(JSON.stringify(result.rows[0]));
+        });
+      } catch (error) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "JSON inválido" }));
+      }
     });
   } else if (method === "PATCH" && path.startsWith("/activity")) {
     const id = path.split("/")[2];
